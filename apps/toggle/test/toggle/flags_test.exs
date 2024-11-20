@@ -129,19 +129,159 @@ defmodule Toggle.FlagsTest do
       {:ok, binding()}
     end
 
-    test "given a flag, returns whether or not its enabled", ctx do
+    test "given a flag, returns whether or not its globally enabled", ctx do
       assert Flags.enabled?(ctx.enabled_flag)
       refute Flags.enabled?(ctx.disabled_flag.name)
     end
 
-    test "given a flag name (string), returns whether or not its enabled", ctx do
+    test "given a flag name (string), returns whether or not its globally enabled", ctx do
       assert Flags.enabled?(ctx.enabled_flag.name)
       refute Flags.enabled?(ctx.disabled_flag.name)
     end
 
-    test "given a flag name (atom), returns whether or not its enabled", ctx do
+    test "given a flag name (atom), returns whether or not its globally enabled", ctx do
       assert Flags.enabled?(String.to_atom(ctx.enabled_flag.name))
       refute Flags.enabled?(String.to_atom(ctx.disabled_flag.name))
+    end
+  end
+
+  describe "enabled?/2" do
+    test "returns true if flag is globally enabled and not individually disabled" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert Flags.enabled?(flag, org_id: 123)
+    end
+
+    test "returns true if flag is not globally enabled but is individually enabled" do
+      %Flag{} = flag = insert_flag(enabled: false, meta: %{"org_id::123" => true})
+      assert Flags.enabled?(flag, org_id: 123)
+      refute Flags.enabled?(flag, org_id: 654)
+    end
+
+    test "returns false if flag is globally enabled but is individually disabled" do
+      %Flag{} = flag = insert_flag(enabled: true, meta: %{"org_id::123" => false})
+      refute Flags.enabled?(flag, org_id: 123)
+      assert Flags.enabled?(flag, org_id: 654)
+    end
+
+    test "returns false if flag is not globally enabled and not individually enabled" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      refute Flags.enabled?(flag, org_id: 123)
+    end
+  end
+
+  describe "disabled?/2" do
+    test "returns false if flag is globally enabled and not individually disabled" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      refute Flags.disabled?(flag, org_id: 123)
+    end
+
+    test "returns false if flag is not globally enabled but is individually enabled" do
+      %Flag{} = flag = insert_flag(enabled: false, meta: %{"org_id::123" => true})
+      refute Flags.disabled?(flag, org_id: 123)
+      assert Flags.disabled?(flag, org_id: 654)
+    end
+
+    test "returns true if flag is globally enabled but is individually disabled" do
+      %Flag{} = flag = insert_flag(enabled: true, meta: %{"org_id::123" => false})
+      assert Flags.disabled?(flag, org_id: 123)
+      refute Flags.disabled?(flag, org_id: 654)
+    end
+
+    test "returns true if flag is not globally enabled and not individually enabled" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert Flags.disabled?(flag, org_id: 123)
+    end
+  end
+
+  describe "enable!/1" do
+    test "enables the given flag" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert :ok = Flags.enable!(flag)
+      assert Flags.enabled?(flag.name)
+    end
+
+    test "enables the given flag by name (string)" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert :ok = Flags.enable!(flag.name)
+      assert Flags.enabled?(flag.name)
+    end
+
+    test "enables the given flag by name (atom)" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert :ok = Flags.enable!(String.to_atom(flag.name))
+      assert Flags.enabled?(flag.name)
+    end
+  end
+
+  describe "disable!/1" do
+    test "disables the given flag" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert :ok = Flags.disable!(flag)
+      assert Flags.disabled?(flag.name)
+    end
+
+    test "disables the given flag by name (string)" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert :ok = Flags.disable!(flag.name)
+      assert Flags.disabled?(flag.name)
+    end
+
+    test "disables the given flag by name (atom)" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert :ok = Flags.disable!(String.to_atom(flag.name))
+      assert Flags.disabled?(flag.name)
+    end
+  end
+
+  describe "enable!/2" do
+    test "enable the given flag for the given entity" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert :ok = Flags.enable!(flag, org_id: 123)
+      assert Flags.enabled?(flag.name, org_id: 123)
+    end
+
+    test "enable the given flag for the given entity by name (string)" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert :ok = Flags.enable!(flag.name, org_id: 123)
+      assert Flags.enabled?(flag.name, org_id: 123)
+    end
+
+    test "enable the given flag for the given entity by name (atom)" do
+      %Flag{} = flag = insert_flag(enabled: false)
+      assert :ok = Flags.enable!(String.to_atom(flag.name), org_id: 123)
+      assert Flags.enabled?(flag.name, org_id: 123)
+    end
+  end
+
+  describe "disable!/2" do
+    test "disable the given flag for the given entity" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert :ok = Flags.disable!(flag, org_id: 123)
+      assert Flags.disabled?(flag.name, org_id: 123)
+    end
+
+    test "disable the given flag for the given entity by name (string)" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert :ok = Flags.disable!(flag.name, org_id: 123)
+      assert Flags.disabled?(flag.name, org_id: 123)
+    end
+
+    test "disable the given flag for the given entity by name (atom)" do
+      %Flag{} = flag = insert_flag(enabled: true)
+      assert :ok = Flags.disable!(String.to_atom(flag.name), org_id: 123)
+      assert Flags.disabled?(flag.name, org_id: 123)
+    end
+  end
+
+  describe "encode_meta!/2" do
+    test "returns the encoded meta key" do
+      assert "org_id::123" == Flags.encode_meta!(:org_id, 123)
+    end
+  end
+
+  describe "decode_meta!/2" do
+    test "returns resource given encoded meta" do
+      assert [{"org_id", "123"}] == Flags.decode_meta!("org_id::123")
     end
   end
 end
