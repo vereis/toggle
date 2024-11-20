@@ -40,7 +40,8 @@ defmodule Toggle.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
       {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, ">= 0.0.0"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:ecto_model, "~> 0.0.1"}
     ]
   end
 
