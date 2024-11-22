@@ -3,6 +3,8 @@ defmodule Toggle.Umbrella.MixProject do
 
   def project do
     [
+      name: :toggle,
+      app: :toggle,
       apps_path: "apps",
       version: "0.1.0",
       start_permanent: Mix.env() == :prod,

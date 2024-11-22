@@ -8,6 +8,7 @@ defmodule Toggle.Flags.Flag do
 
   use Toggle.Schema
 
+  alias Toggle.Cache
   alias Toggle.Comptime
 
   schema Comptime.table_name(Flag) do
@@ -24,6 +25,26 @@ defmodule Toggle.Flags.Flag do
     flag
     |> cast(attrs, [:name, :description, :enabled, :type, :meta])
     |> validate_required([:name, :type])
+  end
+
+  def after_insert(%Flag{} = flag, _delta) do
+    :ok = Cache.put!(Flag, flag)
+    flag
+  end
+
+  def after_get(%Flag{} = flag, _delta) do
+    :ok = Cache.put!(Flag, flag)
+    flag
+  end
+
+  def after_update(%Flag{} = flag, _delta) do
+    :ok = Cache.put!(Flag, flag)
+    flag
+  end
+
+  def after_delete(%Flag{} = flag, _delta) do
+    :ok = Cache.delete!(Flag, flag)
+    flag
   end
 
   @impl EctoModel.Queryable

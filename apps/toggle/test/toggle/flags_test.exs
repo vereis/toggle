@@ -1,6 +1,7 @@
 defmodule Toggle.FlagsTest do
   use Toggle.DataCase
 
+  alias Toggle.Cache
   alias Toggle.Flags
   alias Toggle.Flags.Flag
   alias Toggle.Repo
@@ -14,6 +15,10 @@ defmodule Toggle.FlagsTest do
     flag
   end
 
+  setup do
+    on_exit(fn -> :ok = Cache.reset!() end)
+  end
+
   describe "create_flag/1" do
     test "creates a new flag" do
       attrs = %{name: "new_flag", description: "A new flag", enabled: true}
@@ -24,6 +29,13 @@ defmodule Toggle.FlagsTest do
       assert flag.type == :boolean
       assert flag.meta == %{}
       assert flag.enabled
+    end
+
+    test "caches flag on create" do
+      assert is_nil(Cache.get!(Flag, "new_flag"))
+      assert flag = insert_flag(name: "new_flag")
+      assert cached = Cache.get!(Flag, "new_flag")
+      assert flag.id == cached.id
     end
   end
 
@@ -37,6 +49,16 @@ defmodule Toggle.FlagsTest do
 
       assert flag.id == updated_flag.id
     end
+
+    test "caches flag on update" do
+      assert is_nil(Cache.get!(Flag, "new_flag"))
+
+      assert %Flag{} = flag = insert_flag()
+      assert ^flag = Cache.get!(Flag, flag.name)
+
+      assert {:ok, updated_flag} = Flags.update_flag(flag, %{enabled: true})
+      assert ^updated_flag = Cache.get!(Flag, flag.name)
+    end
   end
 
   describe "delete_flag/1" do
@@ -46,6 +68,16 @@ defmodule Toggle.FlagsTest do
 
       assert flag.id == deleted_flag.id
       refute Repo.exists?(Flag.query(id: flag.id))
+    end
+
+    test "caches flag on delete" do
+      assert is_nil(Cache.get!(Flag, "new_flag"))
+
+      assert %Flag{} = flag = insert_flag()
+      assert ^flag = Cache.get!(Flag, flag.name)
+
+      assert {:ok, _deleted_flag} = Flags.delete_flag(flag)
+      assert is_nil(Cache.get!(Flag, flag.name))
     end
   end
 
