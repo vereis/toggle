@@ -143,6 +143,37 @@ defmodule Toggle.FlagsTest do
       assert Flags.enabled?(String.to_atom(ctx.enabled_flag.name))
       refute Flags.enabled?(String.to_atom(ctx.disabled_flag.name))
     end
+
+    test "given a flag that does not exist, returns false" do
+      refute Flags.enabled?(Ecto.UUID.generate())
+    end
+  end
+
+  describe "disabled?/1" do
+    setup do
+      %Flag{} = enabled_flag = insert_flag(enabled: true)
+      %Flag{} = disabled_flag = insert_flag(enabled: false)
+      {:ok, binding()}
+    end
+
+    test "given a flag, returns whether or not its globally enabled", ctx do
+      refute Flags.disabled?(ctx.enabled_flag)
+      assert Flags.disabled?(ctx.disabled_flag.name)
+    end
+
+    test "given a flag name (string), returns whether or not its globally enabled", ctx do
+      refute Flags.disabled?(ctx.enabled_flag.name)
+      assert Flags.disabled?(ctx.disabled_flag.name)
+    end
+
+    test "given a flag name (atom), returns whether or not its globally enabled", ctx do
+      refute Flags.disabled?(String.to_atom(ctx.enabled_flag.name))
+      assert Flags.disabled?(String.to_atom(ctx.disabled_flag.name))
+    end
+
+    test "given a flag that does not exist, returns true" do
+      assert Flags.disabled?(Ecto.UUID.generate())
+    end
   end
 
   describe "enabled?/2" do
@@ -166,6 +197,10 @@ defmodule Toggle.FlagsTest do
     test "returns false if flag is not globally enabled and not individually enabled" do
       %Flag{} = flag = insert_flag(enabled: false)
       refute Flags.enabled?(flag, org_id: 123)
+    end
+
+    test "returns false if flag does not exist" do
+      refute Flags.enabled?(Ecto.UUID.generate(), org_id: 123)
     end
   end
 
@@ -191,6 +226,10 @@ defmodule Toggle.FlagsTest do
       %Flag{} = flag = insert_flag(enabled: false)
       assert Flags.disabled?(flag, org_id: 123)
     end
+
+    test "returns true if flag does not exist" do
+      assert Flags.disabled?(Ecto.UUID.generate(), org_id: 123)
+    end
   end
 
   describe "enable!/1" do
@@ -210,6 +249,12 @@ defmodule Toggle.FlagsTest do
       %Flag{} = flag = insert_flag(enabled: false)
       assert :ok = Flags.enable!(String.to_atom(flag.name))
       assert Flags.enabled?(flag.name)
+    end
+
+    test "enables the given flag, creating it if it did not exist" do
+      refute Flags.enabled?("new_flag")
+      assert :ok = Flags.enable!("new_flag")
+      assert Flags.enabled?("new_flag")
     end
   end
 
@@ -231,6 +276,12 @@ defmodule Toggle.FlagsTest do
       assert :ok = Flags.disable!(String.to_atom(flag.name))
       assert Flags.disabled?(flag.name)
     end
+
+    test "disables the given flag, creating it if it did not exist" do
+      assert Flags.disabled?("new_flag")
+      assert :ok = Flags.disable!("new_flag")
+      assert Flags.disabled?("new_flag")
+    end
   end
 
   describe "enable!/2" do
@@ -251,6 +302,18 @@ defmodule Toggle.FlagsTest do
       assert :ok = Flags.enable!(String.to_atom(flag.name), org_id: 123)
       assert Flags.enabled?(flag.name, org_id: 123)
     end
+
+    test "enable the given flag for the given entity, creating it if it did not exist" do
+      refute Flags.enabled?("new_flag", org_id: 123)
+      refute Flags.enabled?("new_flag", org_id: 666)
+      refute Flags.enabled?("new_flag")
+
+      assert :ok = Flags.enable!("new_flag", org_id: 123)
+
+      assert Flags.enabled?("new_flag", org_id: 123)
+      refute Flags.enabled?("new_flag", org_id: 666)
+      refute Flags.enabled?("new_flag")
+    end
   end
 
   describe "disable!/2" do
@@ -270,6 +333,18 @@ defmodule Toggle.FlagsTest do
       %Flag{} = flag = insert_flag(enabled: true)
       assert :ok = Flags.disable!(String.to_atom(flag.name), org_id: 123)
       assert Flags.disabled?(flag.name, org_id: 123)
+    end
+
+    test "disable the given flag for the given entity, creating it if it did not exist" do
+      assert Flags.disabled?("new_flag", org_id: 123)
+      assert Flags.disabled?("new_flag", org_id: 666)
+      assert Flags.disabled?("new_flag")
+
+      assert :ok = Flags.disable!("new_flag", org_id: 123)
+
+      assert Flags.disabled?("new_flag", org_id: 123)
+      assert Flags.disabled?("new_flag", org_id: 666)
+      assert Flags.disabled?("new_flag")
     end
   end
 
