@@ -133,7 +133,7 @@ defmodule Toggle.Flags do
     not enabled?(flag_or_flag_name, meta)
   end
 
-  @doc "Globally enables the given flag."
+  @doc "Globally enables the given flag. Will create the given flag if it does not exist."
   @spec enable!(flag :: Flag.t()) :: :ok
   @spec enable!(String.t()) :: :ok
   @spec enable!(atom()) :: :ok
@@ -144,16 +144,21 @@ defmodule Toggle.Flags do
 
   def enable!(flag_name) do
     Repo.transaction(fn ->
-      :ok =
-        flag_name
-        |> get_flag()
-        |> enable!()
+      flag_name
+      |> get_flag()
+      |> case do
+        nil ->
+          create_flag(%{name: flag_name, enabled: true})
+
+        flag ->
+          enable!(flag)
+      end
     end)
 
     :ok
   end
 
-  @doc "Enable the given flag for the given resource."
+  @doc "Enable the given flag for the given resource. Will create the given flag if it does not exist."
   @spec enable!(flag :: Flag.t(), meta :: resource()) :: :ok
   def enable!(%Flag{meta: meta} = flag, [{meta_key, meta_value}]) do
     patched_meta = Map.put(meta, encode_meta!(meta_key, meta_value), true)
@@ -163,16 +168,25 @@ defmodule Toggle.Flags do
 
   def enable!(flag_name, [{meta_key, meta_value}]) do
     Repo.transaction(fn ->
-      :ok =
-        flag_name
-        |> get_flag()
-        |> enable!([{meta_key, meta_value}])
+      flag_name
+      |> get_flag()
+      |> case do
+        nil ->
+          create_flag(%{
+            name: flag_name,
+            enabled: false,
+            meta: %{encode_meta!(meta_key, meta_value) => true}
+          })
+
+        flag ->
+          enable!(flag, [{meta_key, meta_value}])
+      end
     end)
 
     :ok
   end
 
-  @doc "Globally disables the given flag."
+  @doc "Globally disables the given flag. Will create the given flag if it does not exist."
   @spec disable!(flag :: Flag.t()) :: :ok
   @spec disable!(String.t()) :: :ok
   @spec disable!(atom()) :: :ok
@@ -183,16 +197,21 @@ defmodule Toggle.Flags do
 
   def disable!(flag_name) do
     Repo.transaction(fn ->
-      :ok =
-        flag_name
-        |> get_flag()
-        |> disable!()
+      flag_name
+      |> get_flag()
+      |> case do
+        nil ->
+          create_flag(%{name: flag_name, enabled: false})
+
+        flag ->
+          disable!(flag)
+      end
     end)
 
     :ok
   end
 
-  @doc "Disable the given flag for the given resource."
+  @doc "Disable the given flag for the given resource. Will create the given flag if it does not exist."
   @spec disable!(flag :: Flag.t(), meta :: resource()) :: :ok
   def disable!(%Flag{meta: meta} = flag, [{meta_key, meta_value}]) do
     patched_meta = Map.put(meta, encode_meta!(meta_key, meta_value), false)
@@ -202,10 +221,19 @@ defmodule Toggle.Flags do
 
   def disable!(flag_name, [{meta_key, meta_value}]) do
     Repo.transaction(fn ->
-      :ok =
-        flag_name
-        |> get_flag()
-        |> disable!([{meta_key, meta_value}])
+      flag_name
+      |> get_flag()
+      |> case do
+        nil ->
+          create_flag(%{
+            name: flag_name,
+            enabled: false,
+            meta: %{encode_meta!(meta_key, meta_value) => false}
+          })
+
+        flag ->
+          disable!(flag, [{meta_key, meta_value}])
+      end
     end)
 
     :ok

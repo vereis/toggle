@@ -28,10 +28,9 @@ defmodule Toggle.Flags.Flag do
 
   @impl EctoModel.Queryable
   def query(base_query \\ base_query(), filters) do
-    Enum.reduce(filters, base_query, fn
-      {:name, name}, query when is_atom(name) or is_binary(name) ->
-        from(x in query, where: x.name == ^to_string(name))
-
+    filters
+    |> Keyword.replace_lazy(:name, &to_string/1)
+    |> Enum.reduce(base_query, fn
       {key, value}, query ->
         apply_filter(query, {key, value})
     end)
