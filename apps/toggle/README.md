@@ -1,3 +1,0 @@
-# Toggle
-
-**TODO: Add description**

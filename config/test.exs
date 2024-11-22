@@ -19,11 +19,11 @@ config :phoenix_live_view,
 config :toggle, Toggle.Repo,
   database: Path.expand("../toggle_test.db", __DIR__),
   pool_size: 5,
+  # We don't run a server during test. If one is required,
+  # you can enable the server option below.
   pool: Ecto.Adapters.SQL.Sandbox
 
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
-config :toggle_web, ToggleWeb.Endpoint,
+config :toggle, ToggleWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "HzvdnOmxBgiF/o7LrjVUwsHr8xZe5/j4KboDc1b+jo0ApYh/deOfNt9otusw9Uq1",
+  secret_key_base: "B5C3zRsu5o9nmXIDFg7Bz3T/PgSpE2HeQXAOAF9iz0QM1tzGi9lR5xS15eSHrti4",
   server: false

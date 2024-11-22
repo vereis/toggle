@@ -1,20 +1,18 @@
-# This file is responsible for configuring your umbrella
-# and **all applications** and their dependencies with the
-# help of the Config module.
+# This file is responsible for configuring your application
+# and its dependencies with the aid of the Config module.
 #
-# Note that all applications in your umbrella share the
-# same configuration and dependencies, which is why they
-# all use the same configuration file. If you want different
-# configurations or dependencies per app, it is best to
-# move said applications out of the umbrella.
+# This configuration file is loaded before any dependency and
+# is restricted to this project.
+
+# General application configuration
 import Config
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
-  toggle_web: [
+  toggle: [
     args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
-    cd: Path.expand("../apps/toggle_web/assets", __DIR__),
+    cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
@@ -29,21 +27,17 @@ config :phoenix, :json_library, Jason
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "3.4.3",
-  toggle_web: [
+  toggle: [
     args: ~w(
       --config=tailwind.config.js
       --input=css/app.css
       --output=../priv/static/assets/app.css
     ),
-    cd: Path.expand("../apps/toggle_web/assets", __DIR__)
+    cd: Path.expand("../assets", __DIR__)
   ]
 
-# Configure Mix tasks and generators
-config :toggle,
-  ecto_repos: [Toggle.Repo]
-
 # Configures the endpoint
-config :toggle_web, ToggleWeb.Endpoint,
+config :toggle, ToggleWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
@@ -51,12 +45,12 @@ config :toggle_web, ToggleWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Toggle.PubSub,
-  # Import environment specific config. This must remain at the bottom
-  # of this file so it overrides the configuration defined above.
-  live_view: [signing_salt: "ux5eChA8"]
+  live_view: [signing_salt: "pxF8veGd"]
 
-config :toggle_web,
+# Import environment specific config. This must remain at the bottom
+# of this file so it overrides the configuration defined above.
+config :toggle,
   ecto_repos: [Toggle.Repo],
-  generators: [context_app: :toggle]
+  generators: [timestamp_type: :utc_datetime]
 
 import_config "#{config_env()}.exs"
