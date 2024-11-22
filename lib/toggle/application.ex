@@ -8,13 +8,16 @@ defmodule Toggle.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {Cachex, [:toggle_cache]},
+      ToggleWeb.Telemetry,
       Toggle.Repo,
       {Ecto.Migrator, repos: Application.fetch_env!(:toggle, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:toggle, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Toggle.PubSub},
-      {Cachex, [:toggle_cache]}
       # Start a worker by calling: Toggle.Worker.start_link(arg)
-      # {Toggle.Worker, arg}
+      # {Toggle.Worker, arg},
+      # Start to serve requests, typically the last entry
+      ToggleWeb.Endpoint
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Toggle.Supervisor)

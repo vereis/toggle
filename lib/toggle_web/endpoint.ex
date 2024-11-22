@@ -1,13 +1,13 @@
 defmodule ToggleWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :toggle_web
+  use Phoenix.Endpoint, otp_app: :toggle
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_toggle_web_key",
-    signing_salt: "e94JjlKG",
+    key: "_toggle_key",
+    signing_salt: "wPhcCIeB",
     same_site: "Lax"
   ]
 
@@ -21,7 +21,7 @@ defmodule ToggleWeb.Endpoint do
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/",
-    from: :toggle_web,
+    from: :toggle,
     gzip: false,
     only: ToggleWeb.static_paths()
 
@@ -31,7 +31,7 @@ defmodule ToggleWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :toggle_web
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :toggle
   end
 
   plug Plug.RequestId

@@ -1,5 +1,5 @@
 defmodule Toggle do
-  @moduledoc "../../README.md"
+  @moduledoc "README.md"
              |> File.read!()
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
