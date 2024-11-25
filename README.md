@@ -128,6 +128,33 @@ the cache if it is available.
 
 The cache has a default ttl of one minute.
 
+## Testing
+
+If you're using and interacting `Toggle` in your tests, every time a flag value is created, updated, or deleted, `Toggle`
+will automatically cache the state of the flag.
+
+This can lead to unexpected results in your tests, as unlike the datastore, the cache is not reset between tests by
+default.
+
+You can reset the cache between tests by calling `Toggle.Cache.reset/0` in your test setup or teardown.
+
+```elixir
+defmodule MyApp.MyTest do
+  use ExUnit.Case
+
+  # Always reset cache at the beginning of each test.
+  setup do
+    Toggle.Cache.reset()
+    :ok
+  end
+
+  # Or, reset the cache as tests teardown.
+  setup do
+    on_exit(fn -> Toggle.Cache.reset() end)
+  end
+end
+```
+
 ## Configuration
 
 `Toggle` aims to be as simple as possible, and as such, it does not require any configuration.
@@ -165,6 +192,7 @@ Additionally, please feel free to query the `Toggle.Flags.Flag` schema directly.
 - Add support for more flag types such as `:percentage` and `:datetime`.
 - Add support for deprecating flags and emitting deprecation warnings after a certain date.
 - Add support for hooks that can be run before or after a flag is enabled or disabled.
+- Add support for disabling the cache -- useful for tests.
 - Pluggable pub/sub strategies.
 - Add a `Phoenix.LiveView` interface for managing flags in real-time.
     - Including metrics and analytics for flag usage.
