@@ -7,24 +7,23 @@ defmodule Toggle.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      {Cachex, [:toggle_cache]},
-      ToggleWeb.Telemetry,
-      Toggle.Repo,
-      {Ecto.Migrator, repos: Application.fetch_env!(:toggle, :ecto_repos), skip: skip_migrations?()},
-      {DNSCluster, query: Application.get_env(:toggle, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Toggle.PubSub},
-      # Start a worker by calling: Toggle.Worker.start_link(arg)
-      # {Toggle.Worker, arg},
-      # Start to serve requests, typically the last entry
-      ToggleWeb.Endpoint
-    ]
+    children =
+      maybe_add_repo([
+        {Cachex, [:toggle_cache]},
+        ToggleWeb.Telemetry,
+        {DNSCluster, query: Application.get_env(:toggle, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Toggle.PubSub},
+        ToggleWeb.Endpoint
+      ])
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Toggle.Supervisor)
   end
 
-  defp skip_migrations? do
-    # By default, sqlite migrations are run when using a release
-    System.get_env("RELEASE_NAME") != nil
+  # Only start the repo if it's available (i.e. for local development or testing)
+  defp maybe_add_repo(children) do
+    case Code.ensure_loaded(Toggle.Repo) do
+      {:module, Toggle.Repo} -> [Toggle.Repo | children]
+      _otherwise -> children
+    end
   end
 end

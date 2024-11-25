@@ -9,6 +9,11 @@ defmodule Toggle.Comptime do
 
   @cache_ttl Application.compile_env(:toggle, :cache_ttl, :timer.minutes(1))
 
+  @repo Application.compile_env(:toggle, :repo, Toggle.Repo)
+
+  @doc "The repo used to store flags. Defaults to Toggle.Repo."
+  def repo, do: @repo
+
   @doc "Returns the name of the database table used to store flags. Defaults to \"toggle_flags\"."
   def table_name(schema), do: @table_names[schema]
 

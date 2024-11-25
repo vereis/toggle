@@ -19,12 +19,23 @@ end
 
 ## Usage
 
-In order to use Toggle, you need to add an Ecto Migration to your application to set up the database table
-`Toggle` will use to store data.
+In order to use Toggle, you need to:
+
+1) Configure `Toggle` to use your application's Ecto Repo to store flags.
+2) Add an Ecto Migration to your application to set up the database table `Toggle` will use to store data.
+3) Set up `EctoHooks` in your application's Ecto Repo.
+
+### Repo Setup & Migrations
 
 Currently, `Toggle` supports SQLite3 and Postgres as database backends.
 
-You can create migrations using the `Toggle.Migrations.SQLite` or `Toggle.Migrations.Postgres` helper modules:
+You can set up `Toggle` to use your application's Ecto Repo by adding the following configuration to your `config.exs`:
+
+```elixir
+config :toggle, repo: MyApp.Repo
+```
+
+Then, you can create migrations using the `Toggle.Migrations.SQLite` or `Toggle.Migrations.Postgres` helper modules:
 
 ```elixir
 defmodule MyApp.Repo.Migrations.CreateFlagsTables do
@@ -42,7 +53,27 @@ defmodule MyApp.Repo.Migrations.CreateFlagsTables do
 end
 ```
 
-After you have run your migrations, you can start using `Toggle` in your application.
+### EctoHooks Setup
+
+`Toggle` uses `EctoHooks` to automatically update a cache whenever a flag is created, updated, or deleted.
+
+Please add the following lines to your application's `Repo` module:
+
+```elixir
+use EctoMiddleware
+
+def middleware(_action, _resource) do
+  [EctoHooks.Middleware.Before, EctoMiddleware.Super, EctoHooks.Middleware.After]
+end
+```
+
+This will enable `EctoHooks` for your application's `Repo` module.
+
+Please see the documentation for `EctoHooks` for further information, though this is not needed to use `Toggle`.
+
+### Using Toggle
+
+After you have run your migrations and set up `EctoHooks`, you can start using `Toggle` in your application.
 
 ```elixir
 iex> Toggle.enabled?("my_feature")
@@ -103,6 +134,7 @@ The cache has a default ttl of one minute.
 
 The only possible configuration at the time of writing is:
 
+- `:repo` - The Ecto Repo to use for storing flags. Required.
 - `:flag_table_name` - The name of the database table used to store flags. Defaults to `"toggle_flags"`.
 - `:cache_ttl` - The time-to-live for cached flags. Defaults to 1 minute.
 
