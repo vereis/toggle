@@ -1,12 +1,16 @@
-defmodule Toggle.Repo do
-  use Ecto.Repo,
-    otp_app: :toggle,
-    adapter: Ecto.Adapters.SQLite3
+if Mix.env() == :test do
+  defmodule Toggle.Repo do
+    @moduledoc "Only used for local development in `Mix.env() == :test`"
 
-  use EctoMiddleware
+    use Ecto.Repo,
+      otp_app: :toggle,
+      adapter: Ecto.Adapters.SQLite3
 
-  @dialyzer {:nowarn_function, middleware: 2}
-  def middleware(_action, _resource) do
-    [EctoHooks.Middleware.Before, EctoMiddleware.Super, EctoHooks.Middleware.After]
+    use EctoMiddleware
+
+    @dialyzer {:nowarn_function, middleware: 2}
+    def middleware(_action, _resource) do
+      [EctoHooks.Middleware.Before, EctoMiddleware.Super, EctoHooks.Middleware.After]
+    end
   end
 end

@@ -29,8 +29,9 @@ defmodule Toggle.Flags do
   ```
   """
 
+  import Toggle.Comptime, only: [repo: 0]
+
   alias Toggle.Flags.Flag
-  alias Toggle.Repo
 
   @type resource_key :: atom() | String.t() | number()
   @type resource_value :: atom() | String.t() | number()
@@ -42,7 +43,7 @@ defmodule Toggle.Flags do
   def create_flag(attrs) do
     %Flag{}
     |> Flag.changeset(attrs)
-    |> Repo.insert()
+    |> repo().insert()
   end
 
   @doc "Updates a flag."
@@ -51,13 +52,13 @@ defmodule Toggle.Flags do
   def update_flag(%Flag{} = flag, attrs) do
     flag
     |> Flag.changeset(attrs)
-    |> Repo.update()
+    |> repo().update()
   end
 
   @doc "Deletes a flag."
   @spec delete_flag(flag :: Flag.t()) :: {:ok, Flag.t()} | {:error, Ecto.Changeset.t()}
   def delete_flag(%Flag{} = flag) do
-    Repo.delete(flag)
+    repo().delete(flag)
   end
 
   @doc "Get a flag by the given filters."
@@ -75,13 +76,13 @@ defmodule Toggle.Flags do
   def get_flag(filters) when is_list(filters) do
     filters
     |> Flag.query()
-    |> Repo.one()
+    |> repo().one()
   end
 
   @doc "Get all flags by the given filters."
   @spec list_flags(filters :: Keyword.t()) :: [Flag.t()]
   def list_flags(filters \\ []) do
-    filters |> Flag.query() |> Repo.all()
+    filters |> Flag.query() |> repo().all()
   end
 
   @doc "Is the given flag enabled?"
@@ -93,7 +94,7 @@ defmodule Toggle.Flags do
   end
 
   def enabled?(flag_name) when is_binary(flag_name) or is_atom(flag_name) do
-    Repo.exists?(Flag.query(name: flag_name, enabled: true))
+    repo().exists?(Flag.query(name: flag_name, enabled: true))
   end
 
   @doc "Returns if the given flag is enabled for the given resource."
@@ -143,7 +144,7 @@ defmodule Toggle.Flags do
   end
 
   def enable!(flag_name) do
-    Repo.transaction(fn ->
+    repo().transaction(fn ->
       flag_name
       |> get_flag()
       |> case do
@@ -167,7 +168,7 @@ defmodule Toggle.Flags do
   end
 
   def enable!(flag_name, [{meta_key, meta_value}]) do
-    Repo.transaction(fn ->
+    repo().transaction(fn ->
       flag_name
       |> get_flag()
       |> case do
@@ -196,7 +197,7 @@ defmodule Toggle.Flags do
   end
 
   def disable!(flag_name) do
-    Repo.transaction(fn ->
+    repo().transaction(fn ->
       flag_name
       |> get_flag()
       |> case do
@@ -220,7 +221,7 @@ defmodule Toggle.Flags do
   end
 
   def disable!(flag_name, [{meta_key, meta_value}]) do
-    Repo.transaction(fn ->
+    repo().transaction(fn ->
       flag_name
       |> get_flag()
       |> case do
